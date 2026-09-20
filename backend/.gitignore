@@ -1,0 +1,13 @@
+node_modules
+dist
+
+# Keep environment variables out of version control
+.env
+
+/src/generated/prisma
+
+# Prisma-fetched AI agent skill docs (tooling cache, not project content)
+.agents
+.claude
+.windsurf
+skills-lock.json

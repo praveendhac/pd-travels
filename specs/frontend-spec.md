@@ -58,27 +58,30 @@ Fallback stack: `"Fira Sans", system-ui, -apple-system, sans-serif`
 
 Semantic colors (success/warning/error) use standard, high-saturation values rather than palette-muted tones, so status signals stay unambiguous and don't get lost against the warm neutral background.
 
-Tailwind theme extension:
-```js
-// tailwind.config.js
-theme: {
-  extend: {
-    fontFamily: {
-      sans: ['"Fira Sans"', 'system-ui', '-apple-system', 'sans-serif'],
-    },
-    colors: {
-      background: '#FFFFFF',
-      surface: '#F2E8DC',
-      'surface-border': '#E2D3BE',
-      primary: { DEFAULT: '#16324F', hover: '#0E2338' },
-      text: { DEFAULT: '#1C2B3A', muted: '#6B7280' },
-      success: '#16A34A',
-      warning: '#D97706',
-      error: '#DC2626',
-    },
-  },
-},
+Tailwind theme (v4, CSS-first config — no `tailwind.config.js`; see `frontend/src/index.css`):
+```css
+@import "tailwindcss";
+@import "@fontsource/fira-sans/400.css";
+@import "@fontsource/fira-sans/500.css";
+@import "@fontsource/fira-sans/600.css";
+@import "@fontsource/fira-sans/700.css";
+
+@theme {
+  --font-sans: "Fira Sans", system-ui, -apple-system, sans-serif;
+
+  --color-background: #ffffff;
+  --color-surface: #f2e8dc;
+  --color-surface-border: #e2d3be;
+  --color-primary: #16324f;
+  --color-primary-hover: #0e2338;
+  --color-text: #1c2b3a;
+  --color-text-muted: #6b7280;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+}
 ```
+`@tailwindcss/vite` plugin registered in `vite.config.ts`. Each `--color-*`/`--font-*` token above automatically becomes a utility (e.g. `bg-surface`, `text-primary`, `font-sans`).
 
 ### Layout & Visual Style Patterns
 
