@@ -22,7 +22,7 @@ Vercel (frontend) --HTTPS--> AWS ALB --> ECS/Fargate (Express API) --> RDS (Post
 | Entity | Fields | Relationships |
 |---|---|---|
 | `User` | id, email, password_hash, name, created_at | has many `Trip` (as owner), has many `TripCollaborator` |
-| `Trip` | id, owner_id, name, start_date, end_date, destination, cover_image_url, created_at | belongs to `User` (owner); has many `ItineraryItem`, `Expense`, `TripCollaborator` |
+| `Trip` | id, owner_id, name, start_date, end_date, source, destination, cover_image_url, created_at | belongs to `User` (owner); has many `ItineraryItem`, `Expense`, `TripCollaborator` |
 | `TripCollaborator` | id, trip_id, user_id, role (`owner` \| `editor` \| `viewer`), invited_at, accepted_at | belongs to `Trip` and `User` |
 | `ItineraryItem` | id, trip_id, day_date, start_time, title, location, notes, cost, order_index | belongs to `Trip` |
 | `Expense` | id, trip_id, itinerary_item_id (nullable), category, amount, currency, note, created_by | belongs to `Trip`, optionally to `ItineraryItem` |

@@ -131,7 +131,7 @@
   {
     "data": {
       "items": [
-        { "id": "trip_1", "name": "Japan 2026", "startDate": "2026-11-01", "endDate": "2026-11-14", "destination": "Japan", "coverImageUrl": null, "role": "owner" }
+        { "id": "trip_1", "name": "Japan 2026", "startDate": "2026-11-01", "endDate": "2026-11-14", "source": "San Francisco", "destination": "Japan", "coverImageUrl": null, "role": "owner" }
       ],
       "total": 1
     },
@@ -148,11 +148,11 @@
 - **Auth required:** Yes
 - **Request params/body:**
   ```json
-  { "name": "Japan 2026", "startDate": "2026-11-01", "endDate": "2026-11-14", "destination": "Japan" }
+  { "name": "Japan 2026", "startDate": "2026-11-01", "endDate": "2026-11-14", "source": "San Francisco", "destination": "Japan" }
   ```
 - **Response (success):**
   ```json
-  { "data": { "id": "trip_1", "name": "Japan 2026", "startDate": "2026-11-01", "endDate": "2026-11-14", "destination": "Japan", "coverImageUrl": null, "role": "owner" }, "error": null }
+  { "data": { "id": "trip_1", "name": "Japan 2026", "startDate": "2026-11-01", "endDate": "2026-11-14", "source": "San Francisco", "destination": "Japan", "coverImageUrl": null, "role": "owner" }, "error": null }
   ```
 - **Response (errors):**
   | Status | Code | Meaning |
@@ -174,7 +174,7 @@
 #### PATCH /trips/:tripId
 - **Description:** Update trip fields
 - **Auth required:** Yes (`owner` or `editor` role)
-- **Request params/body:** any subset of `{ name, startDate, endDate, destination, coverImageUrl }`
+- **Request params/body:** any subset of `{ name, startDate, endDate, source, destination, coverImageUrl }`
 - **Response (success):** updated trip object
 - **Response (errors):**
   | Status | Code | Meaning |
