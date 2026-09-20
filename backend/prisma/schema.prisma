@@ -10,92 +10,99 @@ datasource db {
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
-  password_hash String
+  passwordHash  String   @map("password_hash")
   name          String
-  created_at    DateTime @default(now())
+  createdAt     DateTime @default(now()) @map("created_at")
 
-  owned_trips      Trip[]
-  trip_collaborations TripCollaborator[]
-  expenses_created Expense[]
+  ownedTrips        Trip[]
+  tripCollaborations TripCollaborator[]
+  expensesCreated   Expense[]
+
+  @@map("User")
 }
 
 model Trip {
-  id              String   @id @default(cuid())
-  owner_id        String
-  name            String
-  start_date      DateTime
-  end_date        DateTime
-  source          String
-  destination     String
-  cover_image_url String?
-  created_at      DateTime @default(now())
+  id            String   @id @default(cuid())
+  ownerId       String   @map("owner_id")
+  name          String
+  startDate     DateTime @map("start_date")
+  endDate       DateTime @map("end_date")
+  source        String
+  destination   String
+  coverImageUrl String?  @map("cover_image_url")
+  createdAt     DateTime @default(now()) @map("created_at")
 
-  owner        User             @relation(fields: [owner_id], references: [id], onDelete: Cascade)
-  itinerary    ItineraryItem[]
-  expenses     Expense[]
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  itinerary     ItineraryItem[]
+  expenses      Expense[]
   collaborators TripCollaborator[]
 
-  @@index([owner_id])
+  @@index([ownerId])
+  @@map("Trip")
 }
 
 model TripCollaborator {
-  id         String   @id @default(cuid())
-  trip_id    String
-  user_id    String
-  role       String   @default("viewer") // owner | editor | viewer
-  invited_at DateTime @default(now())
-  accepted_at DateTime?
+  id        String   @id @default(cuid())
+  tripId    String   @map("trip_id")
+  userId    String   @map("user_id")
+  role      String   @default("viewer")
+  invitedAt DateTime @default(now()) @map("invited_at")
+  acceptedAt DateTime? @map("accepted_at")
 
-  trip Trip  @relation(fields: [trip_id], references: [id], onDelete: Cascade)
-  user User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([trip_id, user_id])
-  @@index([trip_id])
-  @@index([user_id])
+  @@unique([tripId, userId])
+  @@index([tripId])
+  @@index([userId])
+  @@map("TripCollaborator")
 }
 
 model ItineraryItem {
-  id              String   @id @default(cuid())
-  trip_id         String
-  day_date        DateTime
-  start_time      String?
-  title           String
-  location        String
-  notes           String?
-  cost            Float    @default(0)
-  order_index     Int
+  id        String   @id @default(cuid())
+  tripId    String   @map("trip_id")
+  dayDate   DateTime @map("day_date")
+  startTime String?  @map("start_time")
+  title     String
+  location  String
+  notes     String?
+  cost      Float    @default(0)
+  orderIndex Int     @map("order_index")
 
-  trip Trip @relation(fields: [trip_id], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
-  @@index([trip_id])
+  @@index([tripId])
+  @@map("ItineraryItem")
 }
 
 model Expense {
-  id              String   @id @default(cuid())
-  trip_id         String
-  itinerary_item_id String?
-  category        String
-  amount          Float
-  currency        String   @default("USD")
-  note            String?
-  created_by      String
-  created_at      DateTime @default(now())
+  id               String   @id @default(cuid())
+  tripId           String   @map("trip_id")
+  itineraryItemId  String?  @map("itinerary_item_id")
+  category         String
+  amount           Float
+  currency         String   @default("USD")
+  note             String?
+  createdBy        String   @map("created_by")
+  createdAt        DateTime @default(now()) @map("created_at")
 
-  trip        Trip     @relation(fields: [trip_id], references: [id], onDelete: Cascade)
-  created_by_user User @relation(fields: [created_by], references: [id])
+  trip            Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdByUser   User @relation(fields: [createdBy], references: [id])
 
-  @@index([trip_id])
+  @@index([tripId])
+  @@map("Expense")
 }
 
 model Place {
-  id          String   @id @default(cuid())
-  external_id String   @unique
-  name        String
-  lat         Float
-  lng         Float
-  category    String?
-  raw_json    String
-  cached_at   DateTime @default(now())
+  id         String   @id @default(cuid())
+  externalId String   @unique @map("external_id")
+  name       String
+  lat        Float
+  lng        Float
+  category   String?
+  rawJson    String   @map("raw_json")
+  cachedAt   DateTime @default(now()) @map("cached_at")
 
   @@index([name])
+  @@map("Place")
 }
