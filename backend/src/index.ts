@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import pinoHttp from 'pino-http'
 import cookieParser from 'cookie-parser'
 import authRoutes from './routes/auth'
+import tripsRoutes from './routes/trips'
 
 const app = express()
 const port = process.env.PORT ? Number(process.env.PORT) : 4000
@@ -30,6 +31,7 @@ app.get('/health', (_req, res) => {
 })
 
 app.use('/auth', authRoutes)
+app.use('/trips', tripsRoutes)
 
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`)
