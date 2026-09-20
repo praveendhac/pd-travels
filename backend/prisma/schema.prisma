@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,97 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  created_at    DateTime @default(now())
+
+  owned_trips      Trip[]
+  trip_collaborations TripCollaborator[]
+  expenses_created Expense[]
+}
+
+model Trip {
+  id              String   @id @default(cuid())
+  owner_id        String
+  name            String
+  start_date      DateTime
+  end_date        DateTime
+  source          String
+  destination     String
+  cover_image_url String?
+  created_at      DateTime @default(now())
+
+  owner        User             @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  itinerary    ItineraryItem[]
+  expenses     Expense[]
+  collaborators TripCollaborator[]
+
+  @@index([owner_id])
+}
+
+model TripCollaborator {
+  id         String   @id @default(cuid())
+  trip_id    String
+  user_id    String
+  role       String   @default("viewer") // owner | editor | viewer
+  invited_at DateTime @default(now())
+  accepted_at DateTime?
+
+  trip Trip  @relation(fields: [trip_id], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([trip_id, user_id])
+  @@index([trip_id])
+  @@index([user_id])
+}
+
+model ItineraryItem {
+  id              String   @id @default(cuid())
+  trip_id         String
+  day_date        DateTime
+  start_time      String?
+  title           String
+  location        String
+  notes           String?
+  cost            Float    @default(0)
+  order_index     Int
+
+  trip Trip @relation(fields: [trip_id], references: [id], onDelete: Cascade)
+
+  @@index([trip_id])
+}
+
+model Expense {
+  id              String   @id @default(cuid())
+  trip_id         String
+  itinerary_item_id String?
+  category        String
+  amount          Float
+  currency        String   @default("USD")
+  note            String?
+  created_by      String
+  created_at      DateTime @default(now())
+
+  trip        Trip     @relation(fields: [trip_id], references: [id], onDelete: Cascade)
+  created_by_user User @relation(fields: [created_by], references: [id])
+
+  @@index([trip_id])
+}
+
+model Place {
+  id          String   @id @default(cuid())
+  external_id String   @unique
+  name        String
+  lat         Float
+  lng         Float
+  category    String?
+  raw_json    String
+  cached_at   DateTime @default(now())
+
+  @@index([name])
 }
