@@ -4,7 +4,7 @@ import { useAuth } from '../store/auth'
 import { getMe, refresh } from '../api/auth'
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, accessToken, isLoading, setUser, setAccessToken, setLoading, setError } = useAuth()
+  const { user, accessToken, isLoading, setUser, setAccessToken, setLoading } = useAuth()
 
   useEffect(() => {
     const initAuth = async () => {
