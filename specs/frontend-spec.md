@@ -100,11 +100,12 @@ Reference: mood-board images provided by the user (generic UI/UX marketing graph
 - No prop-drilling for cross-cutting concerns (auth user, theme) — provided via React Context at the app root
 
 ## Authentication & Session Handling
-- Backend issues a token (JWT or session cookie — to be confirmed in `backend-spec.md`)
-- Frontend stores auth state in memory + a TanStack Query `me` query; token itself stored in an httpOnly cookie if backend supports it (preferred over localStorage to reduce XSS risk)
+- **Strategy (finalized in `backend-spec.md`):** JWT access token (~15 min) + httpOnly refresh token cookie (~30 days)
+- Access token returned in the login/refresh response body, held in memory (not localStorage, to reduce XSS exposure), and sent as `Authorization: Bearer <token>` on each API request
+- Frontend also keeps a TanStack Query `me` query to track the current user/auth status
+- On access token expiry (401), the API client transparently calls `/auth/refresh` (using the httpOnly cookie) to get a new access token before retrying; if refresh also fails, triggers a global logout/redirect to `/login`
 - Protected routes wrapped in a `<RequireAuth>` guard that redirects to `/login` if unauthenticated
-- On 401 responses, the API client triggers a global logout/redirect
-- **Cross-origin note:** since the frontend is hosted on Vercel and the backend will almost certainly be on a different domain, an httpOnly cookie requires `Set-Cookie: SameSite=None; Secure` on the backend, plus CORS configured with `Access-Control-Allow-Credentials: true` and an explicit allowed-origin list (not `*`) covering both the production domain and Vercel's per-branch preview URLs. This needs to be decided jointly with `backend-spec.md` — see Open Questions.
+- **Cross-origin note:** since the frontend is hosted on Vercel and the backend on AWS (different domains), the refresh cookie requires `SameSite=None; Secure`, and the backend's CORS config must set `Access-Control-Allow-Credentials: true` with an explicit allowed-origin list (not `*`). Per `backend-spec.md`, Vercel preview deployments are **not** included in that allowlist — preview builds should point at a shared staging API instead.
 
 ## Error Handling & Loading States
 - Loading: skeleton components for list/detail views instead of spinners where layout is known ahead of time
@@ -141,7 +142,6 @@ Reference: mood-board images provided by the user (generic UI/UX marketing graph
 ## Open Questions
 - Confirm core use cases and priority order once `goal-spec.md` is filled — routes/components above may need to change
 - Is dark mode in scope for v1?
-- JWT vs session-cookie auth — depends on `backend-spec.md` decision
 - Do we need offline support (e.g. viewing itinerary without connectivity while traveling)?
-- Custom domain (e.g. `app.pdtravels.com`) vs default `*.vercel.app` subdomain — affects cookie `SameSite`/CORS setup
-- Where will the backend be hosted, and can it share a parent domain with the Vercel frontend to simplify cross-origin auth?
+- Custom domain (e.g. `app.pdtravels.com`) vs default `*.vercel.app` subdomain — affects cookie `SameSite`/CORS setup (backend now confirmed on AWS, so this is cross-domain regardless — see `backend-spec.md`)
+- Is a staging backend environment needed so Vercel preview deployments have something to call?
