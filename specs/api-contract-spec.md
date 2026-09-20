@@ -1,7 +1,5 @@
 # API Contract Spec — Trip Planner
 
-> **Note:** `goal-spec.md` is not yet filled in. Endpoints below are derived from the data model and services in `backend-spec.md` and the pages/components in `frontend-spec.md`, and should be revisited once use cases are confirmed.
-
 ## Conventions
 - **Base URL:** `https://api.pdtravels.com/v1` (exact domain pending the custom-domain decision tracked in `frontend-spec.md`/`backend-spec.md`)
 - **Versioning:** URL path prefix (`/v1`); breaking changes ship as `/v2`, old versions supported for a deprecation window

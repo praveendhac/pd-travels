@@ -1,7 +1,5 @@
 # Backend Spec — Trip Planner
 
-> **Note:** `goal-spec.md` is not yet filled in. The data model and services below are drafted to support the pages/components already defined in `frontend-spec.md` and should be revisited once personas/use cases are confirmed.
-
 ## Tech Stack
 - Language: TypeScript
 - Framework: Express
@@ -12,10 +10,10 @@
 Single Express monolith exposing a REST API (per `api-contract-spec.md`), backed by PostgreSQL. No separate microservices at this stage — the domain (trips, itineraries, budgets, collaborators) is small enough that a modular monolith (one Express app, organized into per-domain modules/routers/services) is simpler to build and deploy than splitting into services prematurely.
 
 ```
-Vercel (frontend) --HTTPS--> AWS ALB --> ECS/Fargate (Express API) --> RDS (PostgreSQL)
+Vercel (frontend) --HTTPS--> Render (Express API, Web Service) --> Render (PostgreSQL)
                                                     |
                                                     +--> Third-party APIs (Places/Maps)
-                                                    +--> SES (email)
+                                                    +--> Email provider (e.g. Resend)
 ```
 
 ## Data Model
@@ -29,7 +27,7 @@ Vercel (frontend) --HTTPS--> AWS ALB --> ECS/Fargate (Express API) --> RDS (Post
 | `Place` (cache) | id, external_id, name, lat, lng, category, raw_json | referenced by `ItineraryItem` (optional, for search result caching) |
 
 ## Database
-- Database: PostgreSQL 16 (managed via AWS RDS)
+- Database: PostgreSQL 16 (managed via Render Postgres)
 - ORM/Query layer: Prisma
 - Migrations: Prisma Migrate, run as an explicit step in CI/CD before deploying the new app version (never auto-migrate on app boot in production)
 
@@ -45,32 +43,31 @@ Vercel (frontend) --HTTPS--> AWS ALB --> ECS/Fargate (Express API) --> RDS (Post
 - **Strategy:** JWT — short-lived access token (~15 min) + long-lived refresh token (~30 days)
 - Access token returned in the login/refresh response body; held in memory on the frontend and sent as `Authorization: Bearer <token>` on each request (matches `frontend-spec.md`'s in-memory auth state)
 - Refresh token set as an **httpOnly, Secure cookie**, used only against a `/auth/refresh` endpoint
-- **Cross-origin requirement:** frontend (Vercel) and backend (AWS) are on different domains, so the refresh cookie needs `SameSite=None; Secure`, and CORS must be configured with `Access-Control-Allow-Credentials: true` plus an explicit allowed-origin list (see Security Considerations) — this resolves the open question left in `frontend-spec.md`
+- **Cross-origin requirement:** frontend (Vercel) and backend (Render) are on different domains, so the refresh cookie needs `SameSite=None; Secure`, and CORS must be configured with `Access-Control-Allow-Credentials: true` plus an explicit allowed-origin list (see Security Considerations) — this resolves the open question left in `frontend-spec.md`
 - **Authorization:** role-based per trip via `TripCollaborator.role` (`owner` > `editor` > `viewer`); middleware checks the caller's role against the trip before mutating endpoints
 
 ## Third-Party Integrations
 | Service | Purpose | Notes |
 |---|---|---|
 | Places/Maps API (e.g. Google Places or Mapbox) | Destination/POI search for `/explore`, autocomplete for itinerary item locations | Choice not yet finalized — see Open Questions |
-| Amazon SES | Transactional email (collaborator invites, password reset) | Natural fit since backend is already on AWS |
+| Resend (or similar) | Transactional email (collaborator invites, password reset) | Simple free-tier email API, no AWS dependency |
 
 ## Background Jobs / Async Processing
 - None required for v1 — collaborator invite emails and other notifications sent synchronously within the request
-- Revisit with a queue (e.g. BullMQ + Redis/SQS) if email sending or place-search caching needs to move off the request path
+- Revisit with a queue (e.g. BullMQ + a Render-managed Redis instance) if email sending or place-search caching needs to move off the request path
 
 ## Infrastructure & Deployment
-- **Compute:** AWS ECS on Fargate running the Express app as a Docker container, behind an Application Load Balancer
-- **Database:** AWS RDS for PostgreSQL, private subnet, only reachable from the ECS service
-- **Container registry:** AWS ECR
-- **CI/CD:** GitHub Actions — on merge to `main`, build Docker image → push to ECR → run Prisma migrations → deploy new ECS task definition
-- **Environments:** dev, staging, prod — separate ECS services/RDS instances (or at minimum separate databases) per environment
-- **Secrets:** AWS Secrets Manager (DB credentials, JWT signing keys, third-party API keys), injected into ECS task definitions as environment variables
-- **Domain/HTTPS:** Route 53 + ACM certificate on the ALB; see Open Questions on whether frontend/backend share a parent domain
+- **Compute:** Render Web Service running the Express app (deployed directly from the GitHub repo, or via the existing Dockerfile — Render supports both)
+- **Database:** Render PostgreSQL (managed, free/starter tier)
+- **CI/CD:** Render auto-deploys on push to `main` (via its GitHub integration); Prisma migrations run as a Render "pre-deploy" command so they execute before the new app version starts serving traffic
+- **Environments:** dev (local only), prod on Render; a low-cost Render free-tier instance can serve as staging for Vercel preview deployments to call (see Open Questions)
+- **Secrets:** Render's built-in environment variable groups (DB credentials, JWT signing keys, third-party API keys) — no separate secrets service needed
+- **Domain/HTTPS:** Render provides a free `*.onrender.com` subdomain with automatic HTTPS; a custom domain can be attached later (see Open Questions on whether frontend/backend share a parent domain)
 
 ## Logging, Monitoring & Observability
-- Structured JSON logs (e.g. via `pino`) shipped to CloudWatch Logs
-- CloudWatch Alarms on 5xx rate, latency (p95), and ECS task health
-- Error tracking via Sentry (or similar) for unhandled exceptions with request context
+- Structured JSON logs (e.g. via `pino`), viewable in Render's built-in log stream (no separate log aggregation service needed at this scale)
+- Render's built-in health checks / restart-on-failure for basic uptime monitoring
+- Error tracking via Sentry (free tier) for unhandled exceptions with request context
 - Request logging includes a correlation/request ID propagated from the frontend for tracing a single user action end-to-end
 
 ## Security Considerations
@@ -80,7 +77,7 @@ Vercel (frontend) --HTTPS--> AWS ALB --> ECS/Fargate (Express API) --> RDS (Post
 - Explicit CORS allowlist: production Vercel domain (or custom domain) + backend's own health-check origin; **Vercel preview deployment URLs are per-branch/dynamic, so credentialed CORS cannot safely wildcard `*.vercel.app`** — preview builds should point at a shared staging API instead of assuming CORS access to production
 - Rate limiting on auth endpoints (`/auth/login`, `/auth/signup`) to slow brute-force attempts
 - Parameterized queries via Prisma (no raw SQL string concatenation) to prevent SQL injection
-- JWT signing secret stored in Secrets Manager, rotated periodically
+- JWT signing secret stored as a Render environment variable, rotated periodically
 
 ## Testing Strategy
 - Unit tests: Jest, for services and business logic in isolation (mocked Prisma client)

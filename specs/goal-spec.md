@@ -45,7 +45,7 @@ Planning a multi-day trip with other people today is scattered across chat threa
 - Not a general-purpose project management or group-chat tool
 
 ## Constraints & Assumptions
-- Frontend on Vercel, backend on AWS (ECS/RDS) — already reflected in `frontend-spec.md`/`backend-spec.md`
+- Frontend on Vercel, backend on Render (free/low-cost tiers, chosen for this being a no-budget personal project) — already reflected in `frontend-spec.md`/`backend-spec.md`
 - No budget, timeline, or team size has been specified yet — flagged below
 - Built incrementally via spec-driven development, one vertical slice (auth → trips → itinerary → budget → places) at a time
 

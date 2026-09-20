@@ -1,7 +1,5 @@
 # Frontend Spec — Trip Planner
 
-> **Note:** `goal-spec.md` is not yet filled in. Pages, components, and use cases below are drafted from reasonable trip-planner assumptions and should be revisited once personas/use cases are confirmed there.
-
 ## Tech Stack
 - Framework: React 18 (Vite)
 - Language: TypeScript
@@ -105,7 +103,7 @@ Reference: mood-board images provided by the user (generic UI/UX marketing graph
 - Frontend also keeps a TanStack Query `me` query to track the current user/auth status
 - On access token expiry (401), the API client transparently calls `/auth/refresh` (using the httpOnly cookie) to get a new access token before retrying; if refresh also fails, triggers a global logout/redirect to `/login`
 - Protected routes wrapped in a `<RequireAuth>` guard that redirects to `/login` if unauthenticated
-- **Cross-origin note:** since the frontend is hosted on Vercel and the backend on AWS (different domains), the refresh cookie requires `SameSite=None; Secure`, and the backend's CORS config must set `Access-Control-Allow-Credentials: true` with an explicit allowed-origin list (not `*`). Per `backend-spec.md`, Vercel preview deployments are **not** included in that allowlist — preview builds should point at a shared staging API instead.
+- **Cross-origin note:** since the frontend is hosted on Vercel and the backend on Render (different domains), the refresh cookie requires `SameSite=None; Secure`, and the backend's CORS config must set `Access-Control-Allow-Credentials: true` with an explicit allowed-origin list (not `*`). Per `backend-spec.md`, Vercel preview deployments are **not** included in that allowlist — preview builds should point at a shared staging API instead.
 
 ## Error Handling & Loading States
 - Loading: skeleton components for list/detail views instead of spinners where layout is known ahead of time
@@ -143,5 +141,5 @@ Reference: mood-board images provided by the user (generic UI/UX marketing graph
 - Confirm core use cases and priority order once `goal-spec.md` is filled — routes/components above may need to change
 - Is dark mode in scope for v1?
 - Do we need offline support (e.g. viewing itinerary without connectivity while traveling)?
-- Custom domain (e.g. `app.pdtravels.com`) vs default `*.vercel.app` subdomain — affects cookie `SameSite`/CORS setup (backend now confirmed on AWS, so this is cross-domain regardless — see `backend-spec.md`)
+- Custom domain (e.g. `app.pdtravels.com`) vs default `*.vercel.app` subdomain — affects cookie `SameSite`/CORS setup (backend now confirmed on Render, so this is cross-domain regardless — see `backend-spec.md`)
 - Is a staging backend environment needed so Vercel preview deployments have something to call?
